@@ -1,0 +1,6 @@
+INIT count 0
+
+LABEL LoopStart
+INC count 1
+OUT count
+GOTO LoopStart
