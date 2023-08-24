@@ -1,12 +1,20 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
-
+#[allow(dead_code)]
 struct Interpreter {
     registers: HashMap<char, i32>,
     memory: Vec<i32>,
     strings: HashMap<String, String>,
     labels: HashMap<String, usize>,
+}
+
+fn format_time(seconds: u64) -> String {
+    let hours = (seconds / 3600) % 24;
+    let minutes = (seconds % 3600) / 60;
+    let seconds = seconds % 60;
+
+    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
 
 impl Interpreter {
@@ -33,15 +41,18 @@ impl Interpreter {
                     if value.starts_with('"') && value.ends_with('"') {
                         // Initialize a string variable
                         let stripped_value = value.trim_matches('"');
-                        self.strings.insert(var.to_string(), stripped_value.to_string());
+                        self.strings
+                            .insert(var.to_string(), stripped_value.to_string());
                     } else if value.contains('.') {
                         // Initialize a float variable
                         let float_value = value.parse::<f64>().unwrap();
-                        self.registers.insert(var.chars().next().unwrap(), float_value as i32);
+                        self.registers
+                            .insert(var.chars().next().unwrap(), float_value as i32);
                     } else {
                         // Initialize an integer variable
                         let int_value = value.parse::<i32>().unwrap();
-                        self.registers.insert(var.chars().next().unwrap(), int_value);
+                        self.registers
+                            .insert(var.chars().next().unwrap(), int_value);
                     }
                     program_counter += 3;
                 }
@@ -66,7 +77,11 @@ impl Interpreter {
                 "STR" => {
                     let name = tokens[program_counter + 1];
                     let content_start = program_counter + 2;
-                    let content_end = content_start + tokens[content_start..].iter().position(|&x| x == "OUTSTR").unwrap_or(tokens.len() - content_start);
+                    let content_end = content_start
+                        + tokens[content_start..]
+                            .iter()
+                            .position(|&x| x == "OUTSTR")
+                            .unwrap_or(tokens.len() - content_start);
                     let content = tokens[content_start..content_end].join(" ");
                     let content_with_newline = content.replace("\\n", "\n");
                     self.strings.insert(name.to_string(), content_with_newline);
@@ -85,13 +100,12 @@ impl Interpreter {
                     program_counter += 2;
                 }
                 "GOTO" => {
-                        let label_name = tokens[program_counter + 1];
-                        if let Some(&target_line) = self.labels.get(&label_name.to_string()) {
-                            program_counter = target_line;
-                        } else {
-                            program_counter += 2;
-                        }
-                   
+                    let label_name = tokens[program_counter + 1];
+                    if let Some(&target_line) = self.labels.get(&label_name.to_string()) {
+                        program_counter = target_line;
+                    } else {
+                        program_counter += 2;
+                    }
                 }
                 "EXIT" => {
                     break;
@@ -104,10 +118,20 @@ impl Interpreter {
                             *reg_val += int_value;
                         } else if let Some(str_val) = self.strings.get(value) {
                             let current_value = reg_val.to_string();
-                            *reg_val = format!("{}{}", current_value, str_val).parse::<i32>().unwrap_or(*reg_val);
+                            *reg_val = format!("{}{}", current_value, str_val)
+                                .parse::<i32>()
+                                .unwrap_or(*reg_val);
                         }
                     }
                     program_counter += 3;
+                }
+                "SHOW_CURRENT_TIME" => {
+                    let current_time = std::time::SystemTime::now();
+                    let since_epoch = current_time.duration_since(std::time::UNIX_EPOCH).unwrap();
+                    let seconds = since_epoch.as_secs();
+                    let formatted_time = format_time(seconds);
+                    println!("{}", formatted_time);
+                    program_counter += 1;
                 }
                 _ => {
                     program_counter += 1;
@@ -139,4 +163,3 @@ fn main() -> io::Result<()> {
 
     Ok(())
 }
-

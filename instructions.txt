@@ -1,6 +1,3 @@
-INIT count 0
-
-LABEL LoopStart
-INC count 1
-OUT count
-GOTO LoopStart
+LABEL s
+SHOW_CURRENT_TIME
+GOTO s
