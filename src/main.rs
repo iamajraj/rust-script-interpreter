@@ -1,20 +1,14 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
+
+use chrono::Local;
 #[allow(dead_code)]
 struct Interpreter {
     registers: HashMap<char, i32>,
     memory: Vec<i32>,
     strings: HashMap<String, String>,
     labels: HashMap<String, usize>,
-}
-
-fn format_time(seconds: u64) -> String {
-    let hours = (seconds / 3600) % 24;
-    let minutes = (seconds % 3600) / 60;
-    let seconds = seconds % 60;
-
-    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
 
 impl Interpreter {
@@ -107,6 +101,9 @@ impl Interpreter {
                         program_counter += 2;
                     }
                 }
+                "CLEAR_SCREEN" => {
+                    print!("\r")
+                }
                 "EXIT" => {
                     break;
                 }
@@ -126,11 +123,9 @@ impl Interpreter {
                     program_counter += 3;
                 }
                 "SHOW_CURRENT_TIME" => {
-                    let current_time = std::time::SystemTime::now();
-                    let since_epoch = current_time.duration_since(std::time::UNIX_EPOCH).unwrap();
-                    let seconds = since_epoch.as_secs();
-                    let formatted_time = format_time(seconds);
-                    println!("{}", formatted_time);
+                    let date = Local::now();
+
+                    println!("{}", date.format("%I:%M:%S %p"));
                     program_counter += 1;
                 }
                 _ => {
